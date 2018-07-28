@@ -12,3 +12,11 @@ module.exports.generateRandomString = (length) => {
   }
   return text;
 };
+
+
+module.exports.getBPMRangeString = (BPM) => {
+	let upper_bound = Math.ceil(BPM / 10) * 10;
+	let lower_bound = upper_bound - 10;
+
+	return `${lower_bound}-${upper_bound}`;
+};
