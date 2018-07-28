@@ -67,7 +67,6 @@ class SpotifyWrapper {
 				if (error) throw error;
 
 				let audio_features = body['audio_features'];
-				console.log(audio_features);
 				audio_features.forEach(audio_feature => {
 					let { id, tempo } = audio_feature; // tempo is BPM
 					let bpm_range_string = getBPMRangeString(tempo);
