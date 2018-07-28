@@ -24,21 +24,38 @@ const initSpotifyWrapper = () => {
 
 initSpotifyWrapper();
 
-app.use(express.static(__dirname + '/public'))
-   .use(cors())
+app.use(cors())
    .use(cookieParser())
    .use(bodyParser.json())
-   .use(bodyParser.urlencoded({ extended: false }));
+   .use(bodyParser.urlencoded({ extended: false }))
+
+app.use(express.static(__dirname + '/public'));
 
 app.post('/init', (req, res) => {
-  let { email, access_token, refresh_token } = req.body;
-  if (!email || !access_token || !refresh_token) {
+  let { access_token } = req.body;
+  if (!access_token) {
     throw new Error(`Incorrect body: ${JSON.stringify(req.body)}`);
   }
 
-  SpotifyWrapper.load(email, access_token, refresh_token, (sp) => {
-    spotifyWrapperInst = sp;
-    res.end('Success');
+  var options = {
+    url: 'https://api.spotify.com/v1/me',
+    headers: { 'Authorization': 'Bearer ' + access_token },
+    json: true
+  };
+
+  request.get(options, (error, response, body) => {
+    if (error) throw error;
+
+    if (body['error']) {
+      let err_msg = `Couldn\'t get info about yourself ${JSON.stringify(body)}`;
+      throw new Error(err_msg);
+    } else {
+      let { email } = body;
+      SpotifyWrapper.load(email, access_token, '', (sp) => {
+        spotifyWrapperInst = sp;
+        res.end('Success');
+      });
+    }
   });
 });
 
