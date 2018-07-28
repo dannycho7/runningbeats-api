@@ -6,6 +6,7 @@ const cors = require('cors');
 const querystring = require('querystring');
 const cookieParser = require('cookie-parser');
 const { generateRandomString } = require("./util");
+const SpotifyWrapper = require("./SpotifyWrapper");
 
 const app = express();
 const stateKey = 'spotify_auth_state';
