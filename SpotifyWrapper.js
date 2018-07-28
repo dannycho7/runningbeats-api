@@ -64,6 +64,8 @@ class SpotifyWrapper {
 			console.log(`Sending request for ${options.url} in partition ${partition_num}`);
 
 			request.get(options, (error, response, body) => {
+				if (error) throw error;
+
 				let audio_features = body['audio_features'];
 				console.log(audio_features);
 				audio_features.forEach(audio_feature => {
@@ -104,6 +106,11 @@ class SpotifyWrapper {
 			if (error) {
 				throw error;
 			}
+
+			if (body['error']) {
+				console.log('access token has expired.');
+				return cb(ids);
+			};
 
 			let tracks = body['items'];
 			tracks.forEach(track_obj => {
