@@ -39,7 +39,7 @@ class SpotifyWrapper {
 				spotifyWrapper.bpm_range_to_track_ids_map = spotifyDump['bpm_range_to_track_ids_map'];
 				return cb(spotifyWrapper);
 			} else {
-				console.log('Could not find saved access token. Fetching tracks...');
+				console.log('Could not find saved dump. Fetching tracks...');
 				spotifyWrapper.fetchTracks(() => cb(spotifyWrapper));
 			}
 		});
