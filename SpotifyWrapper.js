@@ -49,7 +49,7 @@ class SpotifyWrapper {
 	}
 
 	save(cb) {
-		let spotifyDump =new SpotifyDump({
+		let spotifyDump = new SpotifyDump({
 			access_token: this.access_token,
 			refresh_token: this.refresh_token,
 			max_tracks: this.max_tracks,
@@ -114,6 +114,27 @@ class SpotifyWrapper {
 
 	};
 
+	refreshToken(cb) {
+  		var authOptions = {
+			url: 'https://accounts.spotify.com/api/token',
+			headers: { 'Authorization': 'Basic ' + (new Buffer(process.env['CLIENT_ID'] + ':' + process.env['CLIENT_SECRET']).toString('base64')) },
+			form: {
+			  grant_type: 'refresh_token',
+			  refresh_token: this.refresh_token
+			},
+			json: true
+		};
+
+		request.post(authOptions, (error, response, body) => {
+			if (!error && response.statusCode === 200) {
+			  this.access_token = body['access_token'];
+			  this.save(cb);
+			} else {
+				console.log('Refresh failed');
+			}
+		});
+	}
+
 	paginateForIds(url, cb, ids = []) {
 		if (!url || ids.length > this.max_tracks) {
 			return cb(ids);
@@ -133,8 +154,12 @@ class SpotifyWrapper {
 			}
 
 			if (body['error']) {
-				console.log('access token has expired.');
-				return cb(ids);
+				console.log('access token has expired. refreshing token...');
+				this.refreshToken(() => {
+					console.log(`Refresh success: ${this.access_token}`);
+					this.paginateForIds(url, cb, ids); // retry with new access token
+				});
+				return;
 			};
 
 			let tracks = body['items'];
