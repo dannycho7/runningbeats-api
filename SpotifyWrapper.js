@@ -4,7 +4,7 @@ const { getBPMRangeString } = require("./util");
 class SpotifyWrapper {
 	constructor(access_token) {
 		this.access_token = access_token || process.env['DEFAULT_ACCESS_TOKEN'];
-		this.max_tracks = process.env['MAX_TRACKS'] || 1000;
+		this.max_tracks = parseInt(process.env['MAX_TRACKS']) || 1000;
 		this.track_ids = [];
 		this.bpm_range_to_track_ids_map = {};
 	}
