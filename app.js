@@ -16,18 +16,15 @@ let CURRENT_USER_TOKEN = null;
 
 let spotifyWrapperInst;
 
-const initSpotifyWrapper = () => {
-  SpotifyWrapper.load('admin@admin.com', process.env['DEFAULT_ACCESS_TOKEN'], process.env['DEFAULT_REFRESH_TOKEN'], (sp) => {
-    spotifyWrapperInst = sp;
-  });
-};
-
-initSpotifyWrapper();
-
 app.use(cors())
    .use(cookieParser())
    .use(bodyParser.json())
    .use(bodyParser.urlencoded({ extended: false }))
+
+app.use((req, res, next) => {
+  console.log(req.url, req.body);
+  next();
+});
 
 app.use(express.static(__dirname + '/public'));
 
@@ -51,8 +48,10 @@ app.post('/init', (req, res) => {
       throw new Error(err_msg);
     } else {
       let { email } = body;
+      console.log(email, body);
       SpotifyWrapper.load(email, access_token, '', (sp) => {
         spotifyWrapperInst = sp;
+        console.log(`Init called and email was saved as ${spotifyWrapperInst.email} and ${access_token} ==? ${spotifyWrapperInst.access_token}`);
         res.end('Success');
       });
     }
@@ -60,13 +59,19 @@ app.post('/init', (req, res) => {
 });
 
 app.get('/random-track', (req, res) => {
+  if (!spotifyWrapperInst) {
+    throw new Error('No spotify inst');
+  }
+
   let { BPM } = req.query;
 
   if (!BPM) {
     let err_msg = `Invalid BPM: ${BPM}`;
     throw new Error(err_msg);
   } else {
-    res.end(spotifyWrapperInst.getRandomTrackFromBPM(BPM));
+    let track_id = spotifyWrapperInst.getRandomTrackFromBPM(parseInt(BPM));
+    console.log(`Sending back ${track_id}`);
+    res.end(track_id);
   }
 });
 

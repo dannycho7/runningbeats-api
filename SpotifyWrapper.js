@@ -25,7 +25,7 @@ const SpotifyDump = mongoose.model('SpotifyDump', {
 class SpotifyWrapper {
 	constructor(email, access_token, refresh_token) {
 		this.access_token = access_token || process.env['DEFAULT_ACCESS_TOKEN'];
-		this.refresh_token = refresh_token || process.env['DEFAULT_REFRESH_TOKEN'];
+		this.refresh_token = refresh_token;
 		this.max_tracks = parseInt(process.env['MAX_TRACKS']) || 1000;
 		this.track_ids = [];
 		this.bpm_range_to_track_ids_map = {};
@@ -39,14 +39,16 @@ class SpotifyWrapper {
 		cb = () => {}
 	) {
 		let spotifyWrapper = new SpotifyWrapper(email, access_token, refresh_token);
+		console.log(spotifyWrapper);
 
 		SpotifyDump.findOne({ email }, (err, spotifyDump) => {
 			if (spotifyDump) {
-				console.log(`Loaded spotifyDump from DB ${spotifyDump}`);
+				console.log('Loaded spotifyDump from DB');
 				spotifyWrapper.max_tracks = spotifyDump['max_tracks'];
 				spotifyWrapper.track_ids = spotifyDump['tracks_ids'];
-				spotifyWrapper.bpm_range_to_track_ids_map = spotifyDump['bpm_range_to_track_ids_map'];
-				return cb(spotifyWrapper);
+				spotifyWrapper.bpm_range_to_track_ids_map = spotifyDump['bpm_range_to_track_ids_map'] || {};
+				spotifyWrapper.access_token = spotifyDump['access_token'];
+				spotifyWrapper.save(() => cb(spotifyWrapper));
 			} else {
 				console.log('Could not find saved dump. Fetching tracks...');
 				spotifyWrapper.fetchTracks(() => cb(spotifyWrapper));
@@ -142,12 +144,12 @@ class SpotifyWrapper {
 	}
 
 	getRandomTrackFromBPM(BPM) {
-		console.log(this);
 		return randomTrackFromBPM(this.bpm_range_to_track_ids_map, BPM);
 	}
 
 	paginateForIds(url, cb, ids = []) {
 		if (!url || ids.length > this.max_tracks) {
+			console.log(ids.length);
 			return cb(ids);
 		}
 
@@ -160,12 +162,18 @@ class SpotifyWrapper {
 		console.log(`Sending request for ${url}`);
 
 		request.get(options, (error, response, body) => {
+			console.log(body);
 			if (error) {
 				throw error;
 			}
 
 			if (body['error']) {
 				console.log('access token has expired. refreshing token...');
+				console.log(body);
+				if (!this.refresh_token) {
+					throw new Error('token expired for some reason');
+				}
+
 				SpotifyWrapper.refreshAccessToken(this.refresh_token, (access_token) => {
 					this.access_token = access_token;
 					this.save(() => {

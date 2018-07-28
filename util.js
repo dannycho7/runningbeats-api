@@ -35,6 +35,7 @@ const randomTrackFromBPM = (bpm_range_to_track_ids_map, BPM, range_size = 10) =>
 	let depth = 0;
 	let selected_track;
 	while (true) {
+		console.log(`Searching at depth ${depth}`);
 		let bpm_range_range_string_inc = getBPMRangeString(BPM + depth * range_size);
 		if (bpm_range_range_string_inc in bpm_range_to_track_ids_map) {
 			let tracks_in_range = bpm_range_to_track_ids_map[bpm_range_range_string_inc];
@@ -48,6 +49,8 @@ const randomTrackFromBPM = (bpm_range_to_track_ids_map, BPM, range_size = 10) =>
 			selected_track = tracks_in_range[Math.floor(Math.random() * tracks_in_range.length)];
 			break;
 		}
+
+		depth++;
 	}
 
 	return selected_track;
