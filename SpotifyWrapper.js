@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const request = require("request");
 const mongoose = require('mongoose');
-const { getBPMRangeString } = require("./util");
+const { getBPMRangeString, randomTrackFromBPM } = require("./util");
 
 mongoose.connect(
 	process.env['MONGO_URI'] ||'mongodb://localhost:27017/runningbeats-api',
@@ -42,7 +42,7 @@ class SpotifyWrapper {
 
 		SpotifyDump.findOne({ email }, (err, spotifyDump) => {
 			if (spotifyDump) {
-				console.log('Loaded spotifyDump from DB');
+				console.log(`Loaded spotifyDump from DB ${spotifyDump}`);
 				spotifyWrapper.max_tracks = spotifyDump['max_tracks'];
 				spotifyWrapper.track_ids = spotifyDump['tracks_ids'];
 				spotifyWrapper.bpm_range_to_track_ids_map = spotifyDump['bpm_range_to_track_ids_map'];
@@ -139,6 +139,11 @@ class SpotifyWrapper {
 				console.log('Refresh failed');
 			}
 		});
+	}
+
+	getRandomTrackFromBPM(BPM) {
+		console.log(this);
+		return randomTrackFromBPM(this.bpm_range_to_track_ids_map, BPM);
 	}
 
 	paginateForIds(url, cb, ids = []) {

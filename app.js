@@ -59,6 +59,17 @@ app.post('/init', (req, res) => {
   });
 });
 
+app.get('/random-track', (req, res) => {
+  let { BPM } = req.query;
+
+  if (!BPM) {
+    let err_msg = `Invalid BPM: ${BPM}`;
+    throw new Error(err_msg);
+  } else {
+    res.end(spotifyWrapperInst.getRandomTrackFromBPM(BPM));
+  }
+});
+
 app.get('/login', function(req, res) {
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
