@@ -1,5 +1,22 @@
 const request = require("request");
+const mongoose = require('mongoose');
 const { getBPMRangeString } = require("./util");
+
+mongoose.connect(
+	process.env['MONGO_URI'] ||'mongodb://localhost:27017/runningbeats-api',
+	{ useNewUrlParser: true },
+	err => {
+		if (err) throw err;
+		console.log('Successfully connected to DB');
+	}
+);
+
+const SpotifyDump = mongoose.model('SpotifyDump', {
+	access_token: String,
+	max_tracks: Number,
+	track_ids: Array,
+	bpm_range_to_track_ids_map: Object
+});
 
 class SpotifyWrapper {
 	constructor(access_token) {
@@ -7,6 +24,18 @@ class SpotifyWrapper {
 		this.max_tracks = parseInt(process.env['MAX_TRACKS']) || 1000;
 		this.track_ids = [];
 		this.bpm_range_to_track_ids_map = {};
+	}
+
+	save() {
+		let spotifyDump =new SpotifyDump({
+			access_token: this.access_token,
+			max_tracks: this.max_tracks,
+			track_ids: this.track_ids,
+			bpm_range_to_track_ids_map: this.bpm_range_to_track_ids_map
+
+		});
+
+		spotifyDump.save().then(() => console.log('Saved'));
 	}
 
 	fetchTracks(cb = () => {}) {
