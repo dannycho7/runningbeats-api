@@ -18,25 +18,31 @@ const SpotifyDump = mongoose.model('SpotifyDump', {
 	refresh_token: String,
 	max_tracks: Number,
 	track_ids: Array,
-	bpm_range_to_track_ids_map: Object
+	bpm_range_to_track_ids_map: Object,
+	email: String,
 });
 
 class SpotifyWrapper {
-	constructor(access_token, refresh_token) {
+	constructor(email, access_token, refresh_token) {
 		this.access_token = access_token || process.env['DEFAULT_ACCESS_TOKEN'];
 		this.refresh_token = refresh_token || process.env['DEFAULT_REFRESH_TOKEN'];
 		this.max_tracks = parseInt(process.env['MAX_TRACKS']) || 1000;
 		this.track_ids = [];
 		this.bpm_range_to_track_ids_map = {};
+		this.email = email;
 	}
 
-	static load(access_token = process.env['DEFAULT_ACCESS_TOKEN'], cb = () => {}) {
-		let spotifyWrapper = new SpotifyWrapper(access_token);
+	static load(
+		email = 'admin@admin.com',
+		access_token = process.env['DEFAULT_ACCESS_TOKEN'],
+		refresh_token = process.env['DEFAULT_REFRESH_TOKEN'],
+		cb = () => {}
+	) {
+		let spotifyWrapper = new SpotifyWrapper(email, access_token, refresh_token);
 
-		SpotifyDump.findOne({ access_token }, (err, spotifyDump) => {
+		SpotifyDump.findOne({ email }, (err, spotifyDump) => {
 			if (spotifyDump) {
 				console.log('Loaded spotifyDump from DB');
-				spotifyWrapper.max_tracks = spotifyDump['refresh_token'];
 				spotifyWrapper.max_tracks = spotifyDump['max_tracks'];
 				spotifyWrapper.track_ids = spotifyDump['tracks_ids'];
 				spotifyWrapper.bpm_range_to_track_ids_map = spotifyDump['bpm_range_to_track_ids_map'];
@@ -54,8 +60,8 @@ class SpotifyWrapper {
 			refresh_token: this.refresh_token,
 			max_tracks: this.max_tracks,
 			track_ids: this.track_ids,
-			bpm_range_to_track_ids_map: this.bpm_range_to_track_ids_map
-
+			bpm_range_to_track_ids_map: this.bpm_range_to_track_ids_map,
+			email: this.email
 		});
 
 		spotifyDump.save().then(() => {
