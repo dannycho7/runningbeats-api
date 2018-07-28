@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const request = require("request");
 const mongoose = require('mongoose');
 const { getBPMRangeString } = require("./util");
@@ -26,7 +28,24 @@ class SpotifyWrapper {
 		this.bpm_range_to_track_ids_map = {};
 	}
 
-	save() {
+	static load(access_token = process.env['DEFAULT_ACCESS_TOKEN'], cb = () => {}) {
+		let spotifyWrapper = new SpotifyWrapper(access_token);
+
+		SpotifyDump.findOne({ access_token }, (err, spotifyDump) => {
+			if (spotifyDump) {
+				console.log('Loaded spotifyDump from DB');
+				spotifyWrapper.max_tracks = spotifyDump['max_tracks'];
+				spotifyWrapper.track_ids = spotifyDump['tracks_ids'];
+				spotifyWrapper.bpm_range_to_track_ids_map = spotifyDump['bpm_range_to_track_ids_map'];
+				return cb(spotifyWrapper);
+			} else {
+				console.log('Could not find saved access token. Fetching tracks...');
+				spotifyWrapper.fetchTracks(() => cb(spotifyWrapper));
+			}
+		});
+	}
+
+	save(cb) {
 		let spotifyDump =new SpotifyDump({
 			access_token: this.access_token,
 			max_tracks: this.max_tracks,
@@ -35,14 +54,17 @@ class SpotifyWrapper {
 
 		});
 
-		spotifyDump.save().then(() => console.log('Saved'));
+		spotifyDump.save().then(() => {
+			console.log('Saved')
+			cb();
+		});
 	}
 
 	fetchTracks(cb = () => {}) {
 		let track_url = 'https://api.spotify.com/v1/me/tracks?limit=50';
 		this.paginateForIds(track_url, (ids) => {
 			this.track_ids = ids;
-			this.mapToBPM(cb);
+			this.mapToBPM(() => this.save(cb));
 		});
 	};
 
