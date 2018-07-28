@@ -1,21 +1,46 @@
 require('dotenv').config();
 
-const express = require('express');
-const request = require('request');
-const cors = require('cors');
-const querystring = require('querystring');
+const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const { generateRandomString } = require("./util");
+const cors = require('cors');
+const express = require('express');
+const querystring = require('querystring');
+const request = require('request');
 const SpotifyWrapper = require("./SpotifyWrapper");
+const { generateRandomString } = require("./util");
 
 const app = express();
 const stateKey = 'spotify_auth_state';
 
 let CURRENT_USER_TOKEN = null;
 
+let spotifyWrapperInst;
+
+const initSpotifyWrapper = () => {
+  SpotifyWrapper.load('admin@admin.com', process.env['DEFAULT_ACCESS_TOKEN'], process.env['DEFAULT_REFRESH_TOKEN'], (sp) => {
+    spotifyWrapperInst = sp;
+  });
+};
+
+initSpotifyWrapper();
+
 app.use(express.static(__dirname + '/public'))
    .use(cors())
-   .use(cookieParser());
+   .use(cookieParser())
+   .use(bodyParser.json())
+   .use(bodyParser.urlencoded({ extended: false }));
+
+app.post('/init', (req, res) => {
+  let { email, access_token, refresh_token } = req.body;
+  if (!email || !access_token || !refresh_token) {
+    throw new Error(`Incorrect body: ${JSON.stringify(req.body)}`);
+  }
+
+  SpotifyWrapper.load(email, access_token, refresh_token, (sp) => {
+    spotifyWrapperInst = sp;
+    res.end('Success');
+  });
+});
 
 app.get('/login', function(req, res) {
   var state = generateRandomString(16);
