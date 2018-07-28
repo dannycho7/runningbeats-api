@@ -3,7 +3,7 @@
  * @param  {number} length The length of the string
  * @return {string} The generated string
  */
-module.exports.generateRandomString = (length) => {
+const generateRandomString = (length) => {
   var text = '';
   var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -14,9 +14,18 @@ module.exports.generateRandomString = (length) => {
 };
 
 
-module.exports.getBPMRangeString = (BPM) => {
-	let upper_bound = Math.ceil(BPM / 10) * 10;
-	let lower_bound = upper_bound - 10;
+const getBPMRangeString = (BPM, range_size = 10) => {
+	if (BPM <= 0) {
+		return "";
+	} else if (BPM >= 201) {
+		return "201-";
+	}
+
+	let upper_bound = (Math.ceil(BPM / range_size) * range_size);
+	let lower_bound = upper_bound - range_size + 1;
 
 	return `${lower_bound}-${upper_bound}`;
 };
+
+module.exports.generateRandomString = generateRandomString;
+module.exports.getBPMRangeString = getBPMRangeString;
