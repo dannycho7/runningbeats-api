@@ -3,13 +3,16 @@ const request = require("request");
 class SpotifyWrapper {
 	constructor(access_token) {
 		this.access_token = access_token || process.env['DEFAULT_ACCESS_TOKEN'];
-		this.tracks = [];
+		this.max_tracks = process.env['MAX_TRACKS'] || 1000;
+		this.track_ids = [];
 	}
 
 	fetchTracks() {
 		this.tracks = [];
 		let track_url = 'https://api.spotify.com/v1/me/tracks?limit=50';
-		this.paginateForIds(track_url, (ids) => console.log(ids));
+		this.paginateForIds(track_url, (ids) => {
+			this.track_ids = ids;
+		});
 	};
 
 	mapToBPM(track_ids) {
@@ -28,10 +31,11 @@ class SpotifyWrapper {
 			});
 			console.log(ids);
 		});
+
 	};
 
 	paginateForIds(url, cb, ids = []) {
-		if (!url) {
+		if (!url || ids.length > this.max_tracks) {
 			return cb(ids);
 		}
 
@@ -41,13 +45,12 @@ class SpotifyWrapper {
 			json: true
 		};
 
+		console.log(`Sending request for ${url}`);
+
 		request.get(options, (error, response, body) => {
 			if (error) {
-				console.log(error);
-				return;
+				throw error;
 			}
-
-			console.log(body);
 
 			let tracks = body['items'];
 			tracks.forEach(track_obj => {
@@ -55,7 +58,9 @@ class SpotifyWrapper {
 				ids.push(track['id']);
 			});
 
-			this.paginateForIds(body['next'], cb, ids);
+			setTimeout(() => {
+				this.paginateForIds(body['next'], cb, ids);
+			}, 100);
 		});
 	};
 }
