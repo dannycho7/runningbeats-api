@@ -6,6 +6,7 @@ const cors = require('cors');
 const express = require('express');
 const querystring = require('querystring');
 const request = require('request');
+const readline = require('readline');
 const SpotifyWrapper = require("./SpotifyWrapper");
 const { generateRandomString } = require("./util");
 
@@ -14,7 +15,22 @@ const stateKey = 'spotify_auth_state';
 
 let CURRENT_USER_TOKEN = null;
 
+let BPM = 100;
 let spotifyWrapperInst;
+
+const BPMReadInterface = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: true
+});
+
+BPMReadInterface.on('line', function(line){
+  let new_BPM = parseInt(line);
+  if (new_BPM) {
+    console.log(`Changed BPM to ${new_BPM}`);
+    BPM = parseInt(line);
+  }
+});
 
 app.use(cors())
    .use(cookieParser())
