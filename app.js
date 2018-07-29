@@ -79,16 +79,9 @@ app.get('/random-track', (req, res) => {
     throw new Error('No spotify inst');
   }
 
-  let { BPM } = req.query;
-
-  if (!BPM) {
-    let err_msg = `Invalid BPM: ${BPM}`;
-    throw new Error(err_msg);
-  } else {
-    let track_id = spotifyWrapperInst.getRandomTrackFromBPM(parseInt(BPM));
-    console.log(`Sending back ${track_id}`);
-    res.end(track_id);
-  }
+  let track_metadata = spotifyWrapperInst.getRandomTrackFromBPM(parseInt(BPM));
+  console.log(`Sending back ${track_metadata}`);
+  res.json(track_metadata);
 });
 
 app.get('/login', function(req, res) {

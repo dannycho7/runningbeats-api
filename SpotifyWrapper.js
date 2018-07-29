@@ -20,6 +20,7 @@ const SpotifyDump = mongoose.model('SpotifyDump', {
 	track_ids: Array,
 	bpm_range_to_track_ids_map: Object,
 	email: String,
+	track_id_to_name_map: Object,
 });
 
 class SpotifyWrapper {
@@ -29,6 +30,7 @@ class SpotifyWrapper {
 		this.max_tracks = parseInt(process.env['MAX_TRACKS']) || 1000;
 		this.track_ids = [];
 		this.bpm_range_to_track_ids_map = {};
+		this.track_id_to_name_map = {};
 		this.email = email;
 	}
 
@@ -48,6 +50,7 @@ class SpotifyWrapper {
 				spotifyWrapper.track_ids = spotifyDump['tracks_ids'];
 				spotifyWrapper.bpm_range_to_track_ids_map = spotifyDump['bpm_range_to_track_ids_map'] || {};
 				spotifyWrapper.access_token = spotifyDump['access_token'];
+				spotifyWrapper.track_id_to_name_map = spotifyDump['track_id_to_name_map'] || {};
 				spotifyWrapper.save(() => cb(spotifyWrapper));
 			} else {
 				console.log('Could not find saved dump. Fetching tracks...');
@@ -144,7 +147,11 @@ class SpotifyWrapper {
 	}
 
 	getRandomTrackFromBPM(BPM) {
-		return randomTrackFromBPM(this.bpm_range_to_track_ids_map, BPM);
+		let random_track_id = randomTrackFromBPM(this.bpm_range_to_track_ids_map, BPM);
+		return {
+			id: random_track_id,
+			name: this.track_id_to_name_map[random_track_id]
+		};
 	}
 
 	paginateForIds(url, cb, ids = []) {
@@ -187,6 +194,7 @@ class SpotifyWrapper {
 			let tracks = body['items'];
 			tracks.forEach(track_obj => {
 				let track = track_obj['track'];
+				this.track_id_to_name_map[track['id']] = track['name'];
 				ids.push(track['id']);
 			});
 
