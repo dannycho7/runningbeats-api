@@ -80,7 +80,7 @@ app.get('/random-track', (req, res) => {
   }
 
   let track_metadata = spotifyWrapperInst.getRandomTrackFromBPM(parseInt(BPM));
-  console.log(`Sending back ${track_metadata}`);
+  console.log(`Sending back ${JSON.stringify(track_metadata)}`);
   res.json(track_metadata);
 });
 

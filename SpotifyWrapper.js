@@ -65,6 +65,7 @@ class SpotifyWrapper {
 			refresh_token: this.refresh_token,
 			max_tracks: this.max_tracks,
 			track_ids: this.track_ids,
+			track_id_to_metadata_map: this.track_id_to_metadata_map,
 			bpm_range_to_track_ids_map: this.bpm_range_to_track_ids_map,
 			email: this.email
 		});
